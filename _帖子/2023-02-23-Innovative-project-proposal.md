@@ -21,7 +21,7 @@ This homework is to propose an innovative project and describe the key features,
 
 ---
 ## 電子鎖
-！[](https://taiwantour.info/wp-content/uploads/2021/04/1619792363-18cc58e07c950dd49e3b6dec5dc96cde.jpg)
+![](http://www.epicway.com.tw/upload/product/201611211630161.jpg)
 ### 應用功能說明
 1.人臉、指紋、密碼、鑰匙、卡片解鎖
 2.遠程解鎖
