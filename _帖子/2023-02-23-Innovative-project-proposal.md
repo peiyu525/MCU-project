@@ -30,14 +30,13 @@ This homework is to propose an innovative project and describe the key features,
 ### 設計考量與相關技術
 **系統設計考量：**<br>
 1. 操作方式:垂直升降式手臂 or 懸吊式手臂
-2. 移動方式:兩輪 or 滑軌懸吊
-3. 供電方式:鋰電池
-4. 聯網方式:WiFi或BT to 手機
+2. 移動方式:兩輪 
+3.供電方式：電池+自動充電
+4. 聯網方式：WiFi手機
 
 **所需相關技術：**
-1. 滑軌式機器手臂 ＆ 軟式夾具
-2. 食物辨識分類：Jetson-Nano + IMX219
-3. 電子鼻：氣味感測與辨識 MQ2
+1.影像傳輸
+2.辨識技術
 
 ### 系統方塊圖
 ![](https://github.com/rkuo2000/MCU-course/blob/main/images/FutureHome_kitchen_robot.png?raw=true)
