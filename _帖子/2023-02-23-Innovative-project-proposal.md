@@ -29,8 +29,8 @@ This homework is to propose an innovative project and describe the key features,
 ### 設計考量與相關技術
 **系統設計考量：**<br>
 1. 操作方式:可任意選擇操作方式
-2. 移動方式:兩輪 
-3.供電方式：電池+自動充電
+2. 移動方式:兩輪
+3. 供電方式：電池+自動充電
 4. 聯網方式：WiFi手機
 
 **所需相關技術：**
