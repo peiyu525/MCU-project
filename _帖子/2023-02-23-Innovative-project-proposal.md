@@ -24,8 +24,9 @@ This homework is to propose an innovative project and describe the key features,
 ![](https://github.com/rkuo2023/MCU-project/blob/main/images/ESP32_RoboCar.jpg?raw=true)
 
 ### 應用功能說明
-2.遠端解鎖
-
+1個人臉、指紋、密碼、鑰匙、卡片解鎖
+2的遠程解鎖
+3的門外貓眼
 ### 設計考量與相關技術
 **系統設計考量：**<br>
 1. 操作方式:垂直升降式手臂 or 懸吊式手臂
