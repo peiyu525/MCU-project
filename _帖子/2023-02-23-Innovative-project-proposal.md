@@ -21,7 +21,7 @@ This homework is to propose an innovative project and describe the key features,
 
 ---
 ## 電子鎖
-！[](https://i0.wp.com/elock.com.tw/wp-content/uploads/2022/02/2022%E9%9B%BB%E5%AD%90%E9%8E%96%E6%8E%A8%E8%96%A65%E5%A4%A7%E5%93%81%E7%89%8C-0.png)
+！[](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E9%96%80%E9%8E%96.jpg?raw=true)
 ### 應用功能說明
 1.人臉、指紋、密碼、鑰匙、卡片解鎖
 2.遠程解鎖
