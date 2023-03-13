@@ -24,7 +24,6 @@ This homework is to propose an innovative project and describe the key features,
 ![](https://github.com/rkuo2023/MCU-project/blob/main/images/ESP32_RoboCar.jpg?raw=true)
 
 ### 應用功能說明
-1. 1.	人臉、指紋、密碼、鑰匙解鎖
 2.遠端解鎖
 
 ### 設計考量與相關技術
@@ -39,7 +38,7 @@ This homework is to propose an innovative project and describe the key features,
 2.辨識技術
 
 ### 系統方塊圖
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/FutureHome_kitchen_robot.png?raw=true)
+![]https://www.wpgdadatong.com/images/IoT/IOT_NEWS/21443/617_3.png
 
 ---
 ### 參考範例
