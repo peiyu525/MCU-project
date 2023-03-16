@@ -61,12 +61,11 @@ This homework is to specify a Future Home application and describe the key featu
 
 ---
 
----
 
 
 <br>
 <br>
 
-*This site was last updated {{ site.time | date: "%B %d, %Y" }}.*
+
 
 
