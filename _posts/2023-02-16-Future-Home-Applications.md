@@ -36,6 +36,9 @@ This homework is to specify a Future Home application and describe the key featu
 
 ---
 ## 智能洗吹頭髮機
+
+![](https://cc.tvbs.com.tw/img/upload/2017/08/02/20170802192550-e6b1df52.jpg)
+
 ### 應用功能說明
 1. 依照個人設定決定模式
 2. 能決定洗頭髮水溫、力道、時間 
@@ -55,7 +58,7 @@ This homework is to specify a Future Home application and describe the key featu
 5. 物品夾具：
 6. 服務器: 具AI加速(GPU)
   - 影像物件偵測辨識: CSL-YOLO
-  - 任務規劃控制: Mission P
+  - 任務規劃控制: Mission Planner with Floorplan
 
 ### 系統方塊圖
 ![](https://github.com/rkuo2000/MCU-course/blob/main/images/FutureHome_flying_robot.png?raw=true)
