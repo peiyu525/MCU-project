@@ -54,9 +54,7 @@ This homework is to specify a Future Home application and describe the key featu
 1. 擬真手部控制
 2. 溫濕度感測
 3. 人類舒適度偵測 
-4. APP使用 
-5. 物品夾具：
-6. 服務器: 具AI加速(GPU)
+4. 服務器: 具AI加速(GPU)
   - 影像物件偵測辨識: CSL-YOLO
   - 任務規劃控制: Mission Planner with Floorplan
 
