@@ -16,12 +16,12 @@ This homework is to specify a Future Home application and describe the key featu
 
 **Service Robots:**<br>
 
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Future_Home_robots.png?raw=true)
+
 
 ---
 **Home Spaces:**<br>
 
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Future_Home_spaces.png?raw=true)
+
 
 ---
 ### Homework Report
