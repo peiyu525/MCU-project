@@ -35,29 +35,27 @@ This homework is to specify a Future Home application and describe the key featu
   - Draw a System Block Diagram
 
 ---
-## 家用飛行機器人
+## 智能洗吹頭髮機
 ### 應用功能說明
-1. 居家監控：外出時可隨時查看家裡各處狀況
-2. 環境監測：溫濕度感測+瓦斯偵測+空氣品質偵測 
-3. 清潔環境：撢灰塵, 除臭
-4. 丟棄垃圾：丟棄小型垃圾袋至垃圾車或社區資源回收區
-5. 餐飲服務：遞送調味料, 可樂, 水果, 零食
+1. 依照個人設定決定模式
+2. 能決定洗頭髮水溫、力道、時間 
+3. 決定吹頭髮時間、速度、冷熱
 
 ### 設計考量與相關技術
 **系統設計考量：**<br>
-1. 移動方式:共軸雙旋翼
-2. 供電方式:電池＋自動充電
-3. 聯網方式: WiFi 或 BLE to中控電腦
+1. 清洗，吹髮方式:模擬人類手部進行
+2. 供電方式:自動充電
+3. 操控方式:WiFi連接app 以app進行設定 
 
 **所需相關技術：**
-1. 飛行姿態偵測與控制: ESP32 + MPU6050 + PID controller
-2. 溫濕度感測 & 氣體偵測: HTU21D + MQ2 + MQ7 + MQ135
-3. 紅外線遙控: IR-LED 
-4. 影像傳輸: ESP32-CAM模組
-5. 物品夾具：懸吊掛勾, 磁鐵吸吊
+1. 擬真手部控制
+2. 溫濕度感測
+3. 人類舒適度偵測 
+4. APP使用 
+5. 物品夾具：
 6. 服務器: 具AI加速(GPU)
   - 影像物件偵測辨識: CSL-YOLO
-  - 任務規劃控制: Mission Planner with Floorplan
+  - 任務規劃控制: Mission P
 
 ### 系統方塊圖
 ![](https://github.com/rkuo2000/MCU-course/blob/main/images/FutureHome_flying_robot.png?raw=true)
