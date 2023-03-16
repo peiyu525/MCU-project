@@ -54,9 +54,7 @@ This homework is to specify a Future Home application and describe the key featu
 1. 擬真手部控制
 2. 溫濕度感測
 3. 人類舒適度偵測 
-4. 服務器: 具AI加速(GPU)
-  - 影像物件偵測辨識: CSL-YOLO
-  - 任務規劃控制: Mission Planner with Floorplan
+4. APP操作
 
 ### 系統方塊圖
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E5%90%B9%E6%B4%97%E9%AB%AE%E6%A9%9F.gif?raw=true)
