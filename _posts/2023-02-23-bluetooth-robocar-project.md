@@ -9,18 +9,18 @@ tags: [jekyll, ai]
 This project is to implement a bluetooth remote controlled robotcar.
 
 ---
-### 前進
+### Forward
 <iframe width="993" height="559" src="https://youtube.com/shorts/cEgKL3nPrZs?feature=share" title="forward" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-### 後退
+### backward
 <iframe width="993" height="559" src="https://youtube.com/shorts/D0CN3ujb_G0?feature=share" title="backward" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
-### 左轉
+### left
 <iframe width="993" height="559" src="https://youtube.com/shorts/3BkZmkcRrK4?feature=share" title="left" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
-### 右轉
+### right
 <iframe width="993" height="559" src="https://youtube.com/shorts/8w816KhpTxc?feature=share" title="right" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
