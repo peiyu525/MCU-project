@@ -22,7 +22,8 @@ This project is to implement a bluetooth remote controlled robotcar.
 ### 右轉
 <iframe width="473" height="841" src="https://youtube.com/shorts/8w816KhpTxc?feature=share" title="right" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; wed-share" allowfullscreen></iframe>
 
-
+### Nextflix movie: Big Bug
+<iframe width="993" height="559" src="https://www.youtube.com/embed/FWUkh23vBhs" title="BIGBUG Trailer (2022)" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
 ### 設計考量與相關技術
