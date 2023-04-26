@@ -9,7 +9,7 @@ tags: [jekyll, ai]
 This project is to implement a bluetooth remote controlled robotcar.
 
 ---
-### Forward
+### forward
 <iframe width="329" height="586" src="https://youtube.com/shorts/cEgKL3nPrZs?feature=share" title="forward" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ### backward
