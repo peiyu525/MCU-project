@@ -57,7 +57,7 @@ This homework is to specify a Future Home application and describe the key featu
 4. APP操作
 
 ### 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E5%90%B9%E6%B4%97%E9%AB%AE%E6%A9%9F.gif?raw=true)
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E6%B4%97%E9%AB%AE%E6%A9%9F.gif?raw=true)
 
 ---
 
