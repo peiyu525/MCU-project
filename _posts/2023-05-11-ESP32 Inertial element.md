@@ -14,32 +14,6 @@ Introduction to Inter-IC Sound bus.
 
 <iframe width="322" height="572" src="https://www.youtube.com/embed/SQNLK4ldXkY" title="KalmanFilter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ---
-### NodeMCU-32S pinout
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/NodeMCU-32S_pinout.jpg?raw=true)
-
----
-## [ESP32 Audio Input - MAX4466, MAX9814, SPH0645LM4H, INMP441](https://blog.cmgresearch.com/2020/09/12/esp32-audio-input.html)
-[麥克風-構造與原理簡介](https://www.wpgdadatong.com/tw/blog/detail?BID=B4372)<br>
-1. 動圈式 Dynamic
-![](https://edit.wpgdadawant.com/uploads/news_file/blog/2021/5460/tinymce/p3.gif)
-2. 電容式 Condenser
-![](https://edit.wpgdadawant.com/uploads/news_file/blog/2021/5460/tinymce/c.jpg)
-3. 絲帶式 Ribbon
-![](https://edit.wpgdadawant.com/uploads/news_file/blog/2021/5460/tinymce/2qsp000190o377nr38oo.jpg)
-
----
-### MAX4466 & MAX9814
-<iframe width="760" height="428" src="https://www.youtube.com/embed/pPh3_ciEmzs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-<table>
-<tr>
-<td><img src="https://blog.cmgresearch.com/assets/article_images/esp_audio/max4466.png"></td>
-<td><img src="https://blog.cmgresearch.com/assets/article_images/esp_audio/max9814.png"></td>
-</tr>
-</table>
-
-**High-Speed ADC Sampling Using I2S and DMA**<br>
-* setup()
-
 ```
 /* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
  This software may be distributed and modified under the terms of the GNU
