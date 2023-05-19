@@ -18,18 +18,7 @@ Introduction to Inter-IC Sound bus.
 ---
 
 ```
-/* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
- This software may be distributed and modified under the terms of the GNU
- General Public License version 2 (GPL2) as published by the Free Software
- Foundation and appearing in the file GPL2.TXT included in the packaging of
- this file. Please note that GPL2 Section 2[b] requires that all works based
- on this software must also be made publicly available under the terms of
- the GPL2 ("Copyleft").
- Contact information
- -------------------
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+
  */
  
 #include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
@@ -197,14 +186,6 @@ void loop() {
 }
 
 
-// I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v6.12)
-// 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
-// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
-//
-// Changelog:
-//      2019-07-10 - Uses the new version of the DMP Firmware V6.12
-//                 - Note: I believe the Teapot demo is broken with this versin as
-//                 - the fifo buffer structure has changed
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
@@ -472,16 +453,6 @@ void loop() {
   }
 }
 
-
-// I2C device class (I2Cdev) demonstration Processing sketch for MPU6050 DMP output
-// 6/20/2012 by Jeff Rowberg <jeff@rowberg.net>
-// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
-//
-// Changelog:
-//     2012-06-20 - initial release
-//     2016-10-28 - Changed to bi-plane 3d model based on tutorial at  
-//                  https://forum.processing.org/two/discussion/24350/display-obj-file-in-3d
-//                  https://opengameart.org/content/low-poly-biplane
 
 /* ============================================
 I2Cdev device library code is placed under the MIT license
