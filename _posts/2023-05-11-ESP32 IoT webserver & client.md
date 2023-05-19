@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 I2S
+title: ESP32 loT webserver&client
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
@@ -9,12 +9,8 @@ tags: [jekyll, ai]
 Introduction to Inter-IC Sound bus.
 
 ---
-## I2S (Inter-IC Sound bus)
-[Introduction to the I2S Interface](https://www.allaboutcircuits.com/technical-articles/introduction-to-the-i2s-interface/)
-![](https://www.allaboutcircuits.com/uploads/articles/introduction-to-the-i2s-interface_rk_aac_image1.jpg)
-![](https://www.allaboutcircuits.com/uploads/articles/introduction-to-the-i2s-interface_rk_aac_image2.jpg)
-![](https://diyi0t.com/wp-content/uploads/2020/08/I2S-ESP32-Play-from-Memory_Steckplatine.png)
-**BCLK=GPIO26, LRC=GPIO25, DIN=GPIO22**
+## loT webserver&client
+
 
 ---
 ### NodeMCU-32S pinout
