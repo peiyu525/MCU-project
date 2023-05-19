@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 I2S
+title: ESP32  Inertial element
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
@@ -9,13 +9,10 @@ tags: [jekyll, ai]
 Introduction to Inter-IC Sound bus.
 
 ---
-## I2S (Inter-IC Sound bus)
-[Introduction to the I2S Interface](https://www.allaboutcircuits.com/technical-articles/introduction-to-the-i2s-interface/)
-![](https://www.allaboutcircuits.com/uploads/articles/introduction-to-the-i2s-interface_rk_aac_image1.jpg)
-![](https://www.allaboutcircuits.com/uploads/articles/introduction-to-the-i2s-interface_rk_aac_image2.jpg)
-![](https://diyi0t.com/wp-content/uploads/2020/08/I2S-ESP32-Play-from-Memory_Steckplatine.png)
-**BCLK=GPIO26, LRC=GPIO25, DIN=GPIO22**
+## ESP 慣性元件
+<iframe width="322" height="572" src="https://www.youtube.com/embed/Mw2BO-7n3NI" title="DMP6_plane" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
+<iframe width="322" height="572" src="https://www.youtube.com/embed/SQNLK4ldXkY" title="KalmanFilter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ---
 ### NodeMCU-32S pinout
 ![](https://github.com/rkuo2000/MCU-course/blob/main/images/NodeMCU-32S_pinout.jpg?raw=true)
@@ -44,234 +41,619 @@ Introduction to Inter-IC Sound bus.
 * setup()
 
 ```
-i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN),
-    .sample_rate = 40000,
-    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-    .communication_format = I2S_COMM_FORMAT_I2S_LSB,
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 2,
-    .dma_buf_len = 1024,
-    .use_apll = false,
-    .tx_desc_auto_clear = false,
-    .fixed_mclk = 0};
+/* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
+ This software may be distributed and modified under the terms of the GNU
+ General Public License version 2 (GPL2) as published by the Free Software
+ Foundation and appearing in the file GPL2.TXT included in the packaging of
+ this file. Please note that GPL2 Section 2[b] requires that all works based
+ on this software must also be made publicly available under the terms of
+ the GPL2 ("Copyleft").
+ Contact information
+ -------------------
+ Kristian Lauszus, TKJ Electronics
+ Web      :  http://www.tkjelectronics.com
+ e-mail   :  kristianl@tkjelectronics.com
+ */
+ 
+#include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
+#include "I2Cdev.h" 
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
+#include "MPU6050.h"
+// nodeMCU I2C default SCL : D1, SDA : D2
+//#define sda 14 // NodeMCU pin D5
+//#define scl 12 // NodeMCU pin D6
 
-//install and start i2s driver
-i2s_driver_install(I2S_NUM_0, &i2s_config, 4, &i2s_queue);
+#define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
 
-//init ADC pad
-i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_7);
+Kalman kalmanX; // Create the Kalman instances
+Kalman kalmanY;
 
-// enable the ADC
-i2s_adc_enable(I2S_NUM_0);
+/* IMU Data */
+MPU6050 imu;
+int16_t accX, accY, accZ;
+int16_t gyroX, gyroY, gyroZ;
 
-// start a task to read samples from I2S
-TaskHandle_t readerTaskHandle;
-xTaskCreatePinnedToCore(readerTask, "Reader Task", 8192, this, 1, &readerTaskHandle, 0);
-```
+double gyroXangle, gyroYangle; // Angle calculate using the gyro only
+double compAngleX, compAngleY; // Calculated angle using a complementary filter
+double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
-* readerTask()
+uint32_t timer;
+uint8_t i2cData[14]; // Buffer for I2C data
 
-```
-void readerTask(void *param)
-{
-    I2SSampler *sampler = (I2SSampler *)param;
-    while (true)
-    {
-        // wait for some data to arrive on the queue
-        i2s_event_t evt;
-        if (xQueueReceive(sampler->i2s_queue, &evt, portMAX_DELAY) == pdPASS)
-        {
-            if (evt.type == I2S_EVENT_RX_DONE)
-            {
-                size_t bytesRead = 0;
-                do
-                {
-                    // try and fill up our audio buffer
-                    size_t bytesToRead = (ADC_SAMPLES_COUNT - sampler->audioBufferPos) * 2;
-                    void *bufferPosition = (void *)(sampler->currentAudioBuffer + sampler->audioBufferPos);
-                    // read from i2s
-                    i2s_read(I2S_NUM_0, bufferPosition, bytesToRead, &bytesRead, 10 / portTICK_PERIOD_MS);
-                    sampler->audioBufferPos += bytesRead / 2;
-                    if (sampler->audioBufferPos == ADC_SAMPLES_COUNT)
-                    {
-                        // do something with the sample - e.g. notify another task to do some processing
-                   }
-                } while (bytesRead > 0);
-            }
-        }
-    }
+// TODO: Make calibration routine
+
+void setup() {
+  Serial.begin(115200);
+  //Wire.begin(sda, scl);
+  Wire.begin();
+#if ARDUINO >= 157
+  Wire.setClock(400000UL); // Set I2C frequency to 400kHz
+#else
+  TWBR = ((F_CPU / 400000UL) - 16) / 2; // Set I2C frequency to 400kHz
+#endif
+
+  imu.initialize();
+
+  delay(100); // Wait for sensor to stabilize
+
+  /* Set kalman and gyro starting angle */
+  imu.getAcceleration(&accX, &accY, &accZ);
+
+  // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
+  // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
+  // It is then converted from radians to degrees
+#ifdef RESTRICT_PITCH // Eq. 25 and 26
+  double roll  = atan2(accY, accZ) * RAD_TO_DEG;
+  double pitch = atan(-accX / sqrt(accY * accY + accZ * accZ)) * RAD_TO_DEG;
+#else // Eq. 28 and 29
+  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
+  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
+#endif
+
+  kalmanX.setAngle(roll); // Set starting angle
+  kalmanY.setAngle(pitch);
+  gyroXangle = roll;
+  gyroYangle = pitch;
+  compAngleX = roll;
+  compAngleY = pitch;
+
+  timer = micros();
 }
+
+void loop() {
+  /* Update IMU sensor values */
+  imu.getAcceleration(&accX, &accY, &accZ);
+  imu.getRotation(&gyroX, &gyroY, &gyroZ);
+  
+  double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
+  timer = micros();
+
+  // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
+  // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
+  // It is then converted from radians to degrees
+#ifdef RESTRICT_PITCH // Eq. 25 and 26
+  double roll  = atan2(accY, accZ) * RAD_TO_DEG;
+  double pitch = atan(-accX / sqrt(accY * accY + accZ * accZ)) * RAD_TO_DEG;
+#else // Eq. 28 and 29
+  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
+  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
+#endif
+
+  double gyroXrate = gyroX / 131.0; // Convert to deg/s
+  double gyroYrate = gyroY / 131.0; // Convert to deg/s
+
+#ifdef RESTRICT_PITCH
+  // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
+  if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
+    kalmanX.setAngle(roll);
+    compAngleX = roll;
+    kalAngleX = roll;
+    gyroXangle = roll;
+  } else
+    kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
+
+  if (abs(kalAngleX) > 90)
+    gyroYrate = -gyroYrate; // Invert rate, so it fits the restriced accelerometer reading
+  kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+#else
+  // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
+  if ((pitch < -90 && kalAngleY > 90) || (pitch > 90 && kalAngleY < -90)) {
+    kalmanY.setAngle(pitch);
+    compAngleY = pitch;
+    kalAngleY = pitch;
+    gyroYangle = pitch;
+  } else
+    kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt); // Calculate the angle using a Kalman filter
+
+  if (abs(kalAngleY) > 90)
+    gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
+  kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
+#endif
+
+  gyroXangle += gyroXrate * dt; // Calculate gyro angle without any filter
+  gyroYangle += gyroYrate * dt;
+  //gyroXangle += kalmanX.getRate() * dt; // Calculate gyro angle using the unbiased rate
+  //gyroYangle += kalmanY.getRate() * dt;
+
+  compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll; // Calculate the angle using a Complimentary filter
+  compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+
+  // Reset the gyro angle when it has drifted too much
+  if (gyroXangle < -180 || gyroXangle > 180)
+    gyroXangle = kalAngleX;
+  if (gyroYangle < -180 || gyroYangle > 180)
+    gyroYangle = kalAngleY;
+
+  /* Print Data */
+#if 0 // Set to 1 to activate
+  Serial.print(accX); Serial.print("\t");
+  Serial.print(accY); Serial.print("\t");
+  Serial.print(accZ); Serial.print("\t");
+  Serial.print(gyroX); Serial.print("\t");
+  Serial.print(gyroY); Serial.print("\t");
+  Serial.print(gyroZ); Serial.print("\t");
+  Serial.print("\t");
+#endif
+
+  Serial.print(roll); Serial.print("\t");
+  Serial.print(gyroXangle); Serial.print("\t");
+  Serial.print(compAngleX); Serial.print("\t");
+  Serial.print(kalAngleX); Serial.print("\t");
+
+  Serial.print("\t");
+
+  Serial.print(pitch); Serial.print("\t");
+  Serial.print(gyroYangle); Serial.print("\t");
+  Serial.print(compAngleY); Serial.print("\t");
+  Serial.print(kalAngleY); Serial.print("\t");
+
+#if 0 // Set to 1 to print the temperature
+  Serial.print("\t");
+  double temperature = (double)tempRaw / 340.0 + 36.53;
+  Serial.print(temperature); Serial.print("\t");
+#endif
+
+  Serial.print("\r\n");
+  delay(2);
+}
+
+
+// I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v6.12)
+// 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
+// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
+//
+// Changelog:
+//      2019-07-10 - Uses the new version of the DMP Firmware V6.12
+//                 - Note: I believe the Teapot demo is broken with this versin as
+//                 - the fifo buffer structure has changed
+
+// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
+// for both classes must be in the include path of your project
+#include "I2Cdev.h"
+
+#include "MPU6050_6Axis_MotionApps_V6_12.h"
+//#include "MPU6050.h" // not necessary if using MotionApps include file
+
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+#include "Wire.h"
+#endif
+
+// class default I2C address is 0x68
+// specific I2C addresses may be passed as a parameter here
+// AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
+// AD0 high = 0x69
+MPU6050 mpu;
+//MPU6050 mpu(0x69); // <-- use for AD0 high
+
+//#define OUTPUT_READABLE_QUATERNION
+//#define OUTPUT_READABLE_EULER
+//#define OUTPUT_READABLE_YAWPITCHROLL
+//#define OUTPUT_READABLE_REALACCEL
+//#define OUTPUT_READABLE_WORLDACCEL
+#define OUTPUT_TEAPOT
+
+#define INTERRUPT_PIN 0  // use pin 2 on Arduino Uno & most boards
+#define LED_PIN 2 // (Arduino is 13, Teensy is 11, Teensy++ is 6, ESP32 is 2)
+bool blinkState = false;
+
+// MPU control/status vars
+bool dmpReady = false;  // set true if DMP init was successful
+uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
+uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
+uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
+uint16_t fifoCount;     // count of all bytes currently in FIFO
+uint8_t fifoBuffer[64]; // FIFO storage buffer
+
+// orientation/motion vars
+Quaternion q;           // [w, x, y, z]         quaternion container
+VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+VectorInt16 gy;         // [x, y, z]            gyro sensor measurements
+VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+VectorFloat gravity;    // [x, y, z]            gravity vector
+float euler[3];         // [psi, theta, phi]    Euler angle container
+float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+// packet structure for InvenSense teapot demo
+uint8_t teapotPacket[14] = { '$', 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0x00, 0x00, '\r', '\n' };
+
+// ================================================================
+// ===               INTERRUPT DETECTION ROUTINE                ===
+// ================================================================
+
+volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
+void dmpDataReady() {
+  mpuInterrupt = true;
+}
+
+// ================================================================
+// ===                      INITIAL SETUP                       ===
+// ================================================================
+
+void setup() {
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+  Wire.begin();
+  Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+  Fastwire::setup(400, true);
+#endif
+
+  // initialize serial communication
+  // (115200 chosen because it is required for Teapot Demo output, but it's
+  // really up to you depending on your project)
+  Serial.begin(115200);
+  while (!Serial); // wait for Leonardo enumeration, others continue immediately
+
+  // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3V or Arduino
+  // Pro Mini running at 3.3V, cannot handle this baud rate reliably due to
+  // the baud timing being too misaligned with processor ticks. You must use
+  // 38400 or slower in these cases, or use some kind of external separate
+  // crystal solution for the UART timer.
+
+  // initialize device
+  Serial.println(F("Initializing I2C devices..."));
+  mpu.initialize();
+  pinMode(INTERRUPT_PIN, INPUT);
+
+  // verify connection
+  Serial.println(F("Testing device connections..."));
+  Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+
+  // wait for ready
+  Serial.println(F("\nSend any character to begin DMP programming and demo: "));
+  while (Serial.available() && Serial.read()); // empty buffer
+  while (!Serial.available());                 // wait for data
+  while (Serial.available() && Serial.read()); // empty buffer again
+
+  // load and configure the DMP
+  Serial.println(F("Initializing DMP..."));
+  devStatus = mpu.dmpInitialize();
+
+  // supply your own gyro offsets here, scaled for min sensitivity
+  mpu.setXGyroOffset(51);
+  mpu.setYGyroOffset(8);
+  mpu.setZGyroOffset(21);
+  mpu.setXAccelOffset(1150);
+  mpu.setYAccelOffset(-50);
+  mpu.setZAccelOffset(1060);
+  // make sure it worked (returns 0 if so)
+  if (devStatus == 0) {
+    // Calibration Time: generate offsets and calibrate our MPU6050
+    mpu.CalibrateAccel(6);
+    mpu.CalibrateGyro(6);
+    Serial.println();
+    mpu.PrintActiveOffsets();
+    // turn on the DMP, now that it's ready
+    Serial.println(F("Enabling DMP..."));
+    mpu.setDMPEnabled(true);
+
+    // enable Arduino interrupt detection
+    Serial.print(F("Enabling interrupt detection (Arduino external interrupt "));
+    Serial.print(digitalPinToInterrupt(INTERRUPT_PIN));
+    Serial.println(F(")..."));
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), dmpDataReady, RISING);
+    mpuIntStatus = mpu.getIntStatus();
+
+    // set our DMP Ready flag so the main loop() function knows it's okay to use it
+    Serial.println(F("DMP ready! Waiting for first interrupt..."));
+    dmpReady = true;
+
+    // get expected DMP packet size for later comparison
+    packetSize = mpu.dmpGetFIFOPacketSize();
+  } else {
+    // ERROR!
+    // 1 = initial memory load failed
+    // 2 = DMP configuration updates failed
+    // (if it's going to break, usually the code will be 1)
+    Serial.print(F("DMP Initialization failed (code "));
+    Serial.print(devStatus);
+    Serial.println(F(")"));
+  }
+
+  // configure LED for output
+  pinMode(LED_PIN, OUTPUT);
+}
+
+// ================================================================
+// ===                    MAIN PROGRAM LOOP                     ===
+// ================================================================
+
+void loop() {
+  // if programming failed, don't try to do anything
+  if (!dmpReady) return;
+  // read a packet from FIFO
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+
+#ifdef OUTPUT_READABLE_QUATERNION
+    // display quaternion values in easy matrix form: w x y z
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    Serial.print("quat\t");
+    Serial.print(q.w);
+    Serial.print("\t");
+    Serial.print(q.x);
+    Serial.print("\t");
+    Serial.print(q.y);
+    Serial.print("\t");
+    Serial.println(q.z);
+#endif
+
+#ifdef OUTPUT_READABLE_EULER
+    // display Euler angles in degrees
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetEuler(euler, &q);
+    Serial.print("euler\t");
+    Serial.print(euler[0] * 180 / M_PI);
+    Serial.print("\t");
+    Serial.print(euler[1] * 180 / M_PI);
+    Serial.print("\t");
+    Serial.println(euler[2] * 180 / M_PI);
+#endif
+
+#ifdef OUTPUT_READABLE_YAWPITCHROLL
+    // display Euler angles in degrees
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    Serial.print("ypr\t");
+    Serial.print(ypr[0] * 180 / M_PI);
+    Serial.print("\t");
+    Serial.print(ypr[1] * 180 / M_PI);
+    Serial.print("\t");
+    Serial.print(ypr[2] * 180 / M_PI);
+    /*
+      mpu.dmpGetAccel(&aa, fifoBuffer);
+      Serial.print("\tRaw Accl XYZ\t");
+      Serial.print(aa.x);
+      Serial.print("\t");
+      Serial.print(aa.y);
+      Serial.print("\t");
+      Serial.print(aa.z);
+      mpu.dmpGetGyro(&gy, fifoBuffer);
+      Serial.print("\tRaw Gyro XYZ\t");
+      Serial.print(gy.x);
+      Serial.print("\t");
+      Serial.print(gy.y);
+      Serial.print("\t");
+      Serial.print(gy.z);
+    */
+    Serial.println();
+
+#endif
+
+#ifdef OUTPUT_READABLE_REALACCEL
+    // display real acceleration, adjusted to remove gravity
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+    Serial.print("areal\t");
+    Serial.print(aaReal.x);
+    Serial.print("\t");
+    Serial.print(aaReal.y);
+    Serial.print("\t");
+    Serial.println(aaReal.z);
+#endif
+
+#ifdef OUTPUT_READABLE_WORLDACCEL
+    // display initial world-frame acceleration, adjusted to remove gravity
+    // and rotated based on known orientation from quaternion
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+    Serial.print("aworld\t");
+    Serial.print(aaWorld.x);
+    Serial.print("\t");
+    Serial.print(aaWorld.y);
+    Serial.print("\t");
+    Serial.println(aaWorld.z);
+#endif
+
+#ifdef OUTPUT_TEAPOT
+    // display quaternion values in InvenSense Teapot demo format:
+    teapotPacket[2] = fifoBuffer[0];
+    teapotPacket[3] = fifoBuffer[1];
+    teapotPacket[4] = fifoBuffer[4];
+    teapotPacket[5] = fifoBuffer[5];
+    teapotPacket[6] = fifoBuffer[8];
+    teapotPacket[7] = fifoBuffer[9];
+    teapotPacket[8] = fifoBuffer[12];
+    teapotPacket[9] = fifoBuffer[13];
+    Serial.write(teapotPacket, 14);
+    teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
+#endif
+
+    // blink LED to indicate activity
+    blinkState = !blinkState;
+    digitalWrite(LED_PIN, blinkState);
+  }
+}
+
+
+// I2C device class (I2Cdev) demonstration Processing sketch for MPU6050 DMP output
+// 6/20/2012 by Jeff Rowberg <jeff@rowberg.net>
+// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
+//
+// Changelog:
+//     2012-06-20 - initial release
+//     2016-10-28 - Changed to bi-plane 3d model based on tutorial at  
+//                  https://forum.processing.org/two/discussion/24350/display-obj-file-in-3d
+//                  https://opengameart.org/content/low-poly-biplane
+
+/* ============================================
+I2Cdev device library code is placed under the MIT license
+Copyright (c) 2012 Jeff Rowberg
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+===============================================
+*/
+
+import processing.serial.*;
+//import processing.opengl.*;
+import toxi.geom.*;
+import toxi.processing.*;
+
+// NOTE: requires ToxicLibs to be installed in order to run properly.
+// 1. Download from http://toxiclibs.org/downloads
+// 2. Extract into [userdir]/Processing/libraries
+//    (location may be different on Mac/Linux)
+// 3. Run and bask in awesomeness
+
+ToxiclibsSupport gfx;
+
+Serial port;                         // The serial port
+char[] teapotPacket = new char[14];  // InvenSense Teapot packet
+int serialCount = 0;                 // current packet byte position
+int synced = 0;
+int interval = 0;
+
+float[] q = new float[4];
+Quaternion quat = new Quaternion(1, 0, 0, 0);
+
+float[] gravity = new float[3];
+float[] euler = new float[3];
+float[] ypr = new float[3];
+
+
+PShape plane; // 3d model
+
+void setup() {
+    // 640x480 px square viewport 
+    size(640, 480, P3D);
+    gfx = new ToxiclibsSupport(this);
+
+    // setup lights and antialiasing
+    lights();
+    smooth();
+  
+    // display serial port list for debugging/clarity
+    println(Serial.list());
+
+    // get a specific serial port
+    String portName = "COM4";
+    //String portName = "/dev/ttyUSB0";
+    // open the serial port
+    port = new Serial(this, portName, 115200);
+    
+    // send single character to trigger DMP init/start
+    // (expected by MPU6050_DMP6 example Arduino sketch)
+    port.write('r');
+        
+    // Load Plane object
+    // The file must be in the \data folder
+    // of the current sketch to load successfully
+    plane = loadShape("biplane.obj");  
+ 
+    // apply its texture and set orientation 
+    PImage img1=loadImage("diffuse_512.png");
+    plane.setTexture(img1);
+    plane.scale(30);
+    plane.rotateX(PI);
+    plane.rotateY(PI+HALF_PI);
+
+      
+}
+
+void draw() {
+    if (millis() - interval > 1000) {
+        // resend single character to trigger DMP init/start
+        // in case the MPU is halted/reset while applet is running
+        port.write('r');
+        interval = millis();
+    }
+
+    // black background
+    background(0);
+   
+      
+    // translate everything to the middle of the viewport
+    pushMatrix();
+    translate(width / 2, height / 2);
+
+    // toxiclibs direct angle/axis rotation from quaternion (NO gimbal lock!)
+    // (axis order [1, 3, 2] and inversion [-1, +1, +1] is a consequence of
+    // different coordinate system orientation assumptions between Processing
+    // and InvenSense DMP)
+    float[] axis = quat.toAxisAngle();
+    rotate(axis[0], -axis[1], axis[3], axis[2]);
+
+    // draw plane
+    shape(plane, 0, 0);    
+    
+    popMatrix();
+}
+
+void serialEvent(Serial port) {
+    interval = millis();
+    while (port.available() > 0) {
+        int ch = port.read();
+
+        if (synced == 0 && ch != '$') return;   // initial synchronization - also used to resync/realign if needed
+        synced = 1;
+        print ((char)ch);
+
+        if ((serialCount == 1 && ch != 2)
+            || (serialCount == 12 && ch != '\r')
+            || (serialCount == 13 && ch != '\n'))  {
+            serialCount = 0;
+            synced = 0;
+            return;
+        }
+
+        if (serialCount > 0 || ch == '$') {
+            teapotPacket[serialCount++] = (char)ch;
+            if (serialCount == 14) {
+                serialCount = 0; // restart
 ```
 
 ---
-### SPH0645LM4H & INMP441
-<iframe width="760" height="428" src="https://www.youtube.com/embed/3g7l5bm7fZ8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-<table>
-<tr>
-<td><img src="https://blog.cmgresearch.com/assets/article_images/esp_audio/mems.png"></td>
-<td><img src="https://blog.cmgresearch.com/assets/article_images/esp_audio/mems_wiring.png"></td>
-</tr>
-</table>
+
+
 
 ---
-## MEMS microphone
-![](https://blog.cmgresearch.com/assets/article_images/esp_audio/mems_function.png)
 
-### INMP441 MEMS mic
-![](https://i5.walmartimages.com/asr/716d1420-f8bf-4121-88de-de4e5a6d9edf.a9b51470a8aa358d61e6acbc6e1cd833.jpeg?odnHeight=450&odnWidth=450&odnBg=ffffff)
-**Features:** [Datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/INMP441.pdf)<br>
-* 14mm Board Diameter, Low Porfile
-* 60Hz ~ 15KHz Frequency Response within -3dB Roll-Off
-* -26 dBFS Sensitivity at 1kHz, 94dB input
-* 61dBA Signal-to-Noise Ratio (SNR)
-* -87 dBFS Noise Floor
-* 44.1kHz ~ 48kHz sample rates
-* Stereo Input Capabilities (L/R Channels)
-
----
-### Sketc>ESP32_INMP441_SerialPlot
-[ESP32_INMP441_SerialPlot.ino](https://github.com/rkuo2000/arduino/blob/master/examples/ESP32_INMP441_SerialPlot/ESP32_INMP441_SerialPlot.ino)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Example_INMP441.jpg?raw=true)
-* Verify
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_INMP441_SerialPlot.png?raw=true)
-* Upload & Open Serial-Plotter
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_INMP441_SerialPlot_plotter.png?raw=true)
-
----
-## [Smart door bell and noise meter using FFT on ESP32](https://iotassistant.io/esp32/smart-door-bell-noise-meter-using-fft-esp32/)
-<iframe width="640" height="360" src="https://www.youtube.com/embed/-Ie5Lefo5Ks" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-### Fast Fourier Transform (FFT)
-A Fast Fourier transform algorithm allows us to decompose a signal (in this case the sound) from the time domain to the frequency domain. It basically means that if we measure the sound over a period of time we can calculate the frequencies that created it. <br>
-
-The most important parameters of FFT that you need to understand are:<br>
-* The sample rate or sampling frequency (fs)
-> It is measured in Hz and it is basically the number of measurements per second e.g 48kHz. For an audio signal, this is usually the upper limit of your microphone as defined in the datasheet. The higher the sampling frequency, the higher the frequencies we can detect.
-* The number of samples or block length (BL)
-> This is the number of measurements we use for our calculation and it is always as a power of two. e.g: 8,16,32,… 1024, 2048 . The higher the number, the more accurate frequencies we can detect. However, more samples mean more computation required, so it is up to you to set this number based on your computing power and accuracy needs.
-* The measurement duration (D)
-> This is calculated as the time required to take all the required samples. If our sample rate is 48kHz, this means the microphone can take 48000 measurements in one second. But if we only need 1024 measurements, the duration is D = BL/fs = 1024/48000 = 21.3 ms.
-* The frequency resolution (df)
-> This is the spacing between two frequency results and it is defined as df = fs/BL = 48000/1024 = 46.88 Hz . In practice this means that it will be impossible to distinguish between a frequency of 4670Hz and 4680Hz, because the difference is less than the resolution.
-* Nyquist frequency (fn)
-> Based on Niquist theory, this is the maximum frequency that can be accurately determined by FFT and it is calculated as fn = fs / 2 . So we need a sample rate of at least 48kHz to be able to detect a frequency of 24kHz (The range for human hearing is from 20Hz to 20kHz ).
-
-Every FFT implementation takes as input an array of BL values ( BL = 1024 in our above example). It is up to us to make sure these values are sampled correctly (at a fixed sample rate)! The result is also an array of the same size as the input (1024 returned values). We call these values, **bins**. The value of each bin represents the amplitude of a frequency in the measurement. When our doorbell rings, the value of the 1kHz bin will be very high compared with the other bins.
-
-Each bin has a range equal with the frequency resolution (df). So bin[0] will represent the frequencies from 0Hz to 46.88Hz, bin[2] represents 46.88Hz to 93.76Hz and so on. However, due to Niquist theory, only half of the bins contain good values (in our example covering from 0Hz to 24kHz – bin[512]). This is half of the sample rate.
-
-As an example, if we want to get the amplitude for 1kHz for an audio signal sampled at 48kHz with 1024 samples, we will look at the bin 21 (1000Hz/df = 1000Hz/46.88Hz = 21.33). Bin 21 actually covers frequencies from 984.48Hz to 1031.36Hz, hence the decimal value for the bin.
-
-### Audio spectrum analyser with Friture
-[Friture](http://friture.org/) is a free real-time audio analyser for linux, mac and windows. You can use it to check the exact pattern and frequency of your trigger sound: the door bell or fire alarm.
-![](https://iotassistant.io/wp-content/uploads/2020/04/Screenshot-at-2020-04-07-17-03-30.png)
-
-### Sketch>ESP32_INMP441_DoorBell
-FFT parameters:<br>
-* Sample rate (fs) is 22627Hz
-* Number of samples (BL) is 1024
-* Measurement duration (D)* is BL/fs = 45.2ms
-* Frequency resolution (df) is fs/BL = 22Hz
-* Nyquist frequency (fn) is fs/2 = 11.3kHz
-
-[ESP32_INMP441_DoorBell](https://github.com/rkuo2000/arduino/tree/master/examples/ESP32_INMP441_DoorBell)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_INMP441_DoorBell.png?raw=true)
-* open serial-monitor & play [YouTube](https://www.youtube.com/embed/-Ie5Lefo5Ks) for doorbell
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_INMP441_DoorBell_monitor.png?raw=true)
-
----
-### Voice Activity Detector (VAD)
-Paper: [Wake-Up-Word Feature Extraction on FPGA](https://www.researchgate.net/publication/259932047_Wake-Up-Word_Feature_Extraction_on_FPGA)<br>
-Paper: [Voice Activity Detector of Wake-Up-Word Speech Recognition System Design on FPGA](https://www.researchgate.net/publication/270115796_Voice_Activity_Detector_of_Wake-Up-Word_Speech_Recognition_System_Design_on_FPGA)<br>
-
-![](https://www.scirp.org/html/htmlimages/1-1560031x/03049dd4-17c7-416f-9b1a-472011a8a1d2.png)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/FrontEnd_VAD_of_WUW-SR_block_diagram.png?raw=true)
-![](https://www.researchgate.net/profile/Mohamed-Eljhani/publication/270115796/figure/fig4/AS:392118284636163@1470499692084/Speech-signal-Onward-with-VAD-segmentation-MFCC-LPC-and-ENH-MFCC-spectrograms.png)
-
-* **Mel-frequency cepstral coefficients (MFCCs)** are coefficients that collectively make up an MFC.[1] They are derived from a type of cepstral representation of the audio clip (a nonlinear "spectrum-of-a-spectrum").<br>
-* **Linear predictive coding (LPC)** is a method used mostly in audio signal processing and speech processing for representing the spectral envelope of a digital signal of speech in compressed form, using the information of a linear predictive model.<br>
-
----
-## MAX98357 Amplifier (I2S external DAC)
-Features: [Datasheet](https://datasheets.maximintegrated.com/en/ds/MAX98357A-MAX98357B.pdf)<br>
-* Single-Supply Operation (2.5V to 5.5V)
-* 3.2W Output Power into 4Ω at 5V
-* 2.4mA Quiescent Current
-* 92% Efficiency (RL = 8Ω, POUT = 1W)
-* 22.8μVRMS Output Noise (AV = 15dB)
-* Low 0.013% THD+N at 1kHz
-* No MCLK Required
-* Sample Rates of 8kHz to 96kHz
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/MAX98357.png?raw=true)
-
----
-### A2DP-sink
-* Setup ESP-IDF<br>
-`cd ~/esp/esp-idf`<br>
-`. ./export.sh`<br>
-
-* A2DP-Sink example code（藍牙音箱）<br>
-`cd examples/bluetooth/bluedroid/classic_bt/a2dp_sink`<br>
-
-* menu-configure I2S pins<br>
-`idf.py menuconfig`<br>
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/esp-idf_menuconfig_A2DP.png?raw=true)
-`A2DP Example Configuration --->`*press Enter*<br>
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/esp-idf_menuconfig_A2DP_Sink.png?raw=true)
-*modify pin number if necessary*<br>
-`A2DP Sink Output (External I2S Codec) --->`*press Enter*<br>
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/esp-idf_menuconfig_A2DP_Sink_extI2S.png?raw=true)
-*select External I2S Codec*<br>
-*press S to Save*<br>
-*press Q to Quit*<br>
-
-* Build code<br>
-`idf.py build`<br>
-
-* Upload code to ESP32<br>
-`idf.py -p /dev/ttyUSB0 flash`<br>
-*press IO0 button when display ...*<br>
-
----
-### Sketch>ESP32_I2S_DAC_PlayWAV
-* **BCLK=GPIO26, LRC=GPIO25, Din=GPIO22**
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Example_MAX98357.jpg?raw=true)
-[ESP32_I2S_DAC_PlayWAV.ino](https://github.com/rkuo2000/arduino/blob/master/examples/ESP32_I2S_DAC_PlayWAV/ESP32_I2S_DAC_PlayWAV.ino)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_I2S_DAC_PlayWAV.png?raw=true)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_I2S_DAC_PlayWAV_monitor.png?raw=true)
-
----
-### Convert .mp3 to 8-bit mono .wav
-* Use Audacity to open the sound file (.mp3)
-* Select a part of track to cut
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_mp3_to_wav.png?raw=true)
-* Cut the selected
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_Edit_Cut.png?raw=true)
-* Track>Mixer>convert stereo to mono (將立體聲分割成單聲道)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_Track_Mixer_convert_stereo_to_mono.png?raw=true)
-* Set Sample Rate to 8000Hz
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_set_sample_rate_to_8000.png?raw=true)
-* Export -> export to WAV
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_Export_WAV.png?raw=true)
-* Output to other uncompressed format
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_output_to_other_uncompressed_format.png?raw=true)
-* save WAV Unsigned 8-bit PCM 
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_save_WAV_Unsigned_8-bit_PCM.png?raw=true)
-* confirm to save into a .wav file
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_confirm_to_save_WAV.png?raw=true)
-* exit Audacity
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Audacity_exit.png?raw=true)
-
-**Convert .wav to hex file**<br>
-`xxd -i sound.wav sound.h`<br>
-
----
-### Sketch>ESP32_WiFi_Radio
-[ESP32_WiFi_Radio.ino](https://github.com/rkuo2000/arduino/blob/master/examples/ESP32_WiFi_Radio/ESP32_WiFi_Radio.ino)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_WiFi_Radio.png?raw=true)
-![](https://github.com/rkuo2000/MCU-course/blob/main/images/Sketch_ESP32_WiFi_Radio_monitor.png?raw=true)
 
 <br>
 <br>
