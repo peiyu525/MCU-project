@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 PWM
+title: Heartbeat Oxygen Detector
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
