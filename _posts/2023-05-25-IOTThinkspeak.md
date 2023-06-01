@@ -14,6 +14,9 @@ tags: [jekyll, ai]
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/image.png?raw=true)
 
 ---
+
+## 系統方塊圖
+![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
 ```
 
 ---
