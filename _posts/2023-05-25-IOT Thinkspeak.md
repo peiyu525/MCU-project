@@ -6,6 +6,13 @@ category: [Lecture]
 tags: [jekyll, ai]
 ---
 
+
+
+#include <WiFi.h>
+#include "DHT.h"
+
+
+
 ---
 ```
 
@@ -13,10 +20,6 @@ tags: [jekyll, ai]
 
   
 ---
-
-#include <WiFi.h>
-#include "DHT.h"
-
 #define DHTPIN 19     // NodeMCU pin D6 connected to DHT11 pin Data
 DHT dht(DHTPIN, DHT11, 15);
 
