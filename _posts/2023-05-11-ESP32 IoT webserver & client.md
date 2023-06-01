@@ -11,7 +11,8 @@ Introduction to Inter-IC Sound bus.
 ---
 ## loT webserver&client
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/S__162840578.jpg?raw=true)
-
+## 系統方塊圖
+![](https://github.com/peijia0809/MCU-project/blob/main/_posts/sever%20&%20client.png?raw=true)
 ---
 
 ```
