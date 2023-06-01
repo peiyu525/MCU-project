@@ -13,7 +13,7 @@ tags: [jekyll, ai]
 
 ## IOT Thinkspeak
 
-![](https://cc.tvbs.com.tw/img/upload/2017/08/02/20170802192550-e6b1df52.jpg)
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/image.png?raw=true)
 
 ---
 ```
