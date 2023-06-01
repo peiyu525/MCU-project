@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 ADC
+title: IOT Thinkspeak
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
