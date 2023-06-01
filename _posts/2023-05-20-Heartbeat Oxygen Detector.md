@@ -11,7 +11,8 @@ Introduction to PWM functions
 ---
 ## Heartbeat Oxygen Detector
 <iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
+## 系統方塊圖
+![](https://github.com/peijia0809/MCU-project/blob/main/_posts/%E4%BD%A0%E7%9A%84%E6%AE%B5%E8%90%BD%E6%96%87%E5%AD%97.png?raw=true)
 ```
 // MAX30102 + 128x32 OLED(I2C)
 #include <Adafruit_GFX.h>        //OLED libraries
