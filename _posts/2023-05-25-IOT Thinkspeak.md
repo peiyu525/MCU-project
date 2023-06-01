@@ -9,7 +9,7 @@ tags: [jekyll, ai]
 Introduction to ADC functions, and Joystick, Thermistor, Photoresistor, Gas sensors (MQ-2, MQ-3, MQ-135), eNose.
 ---
 ## ADC (Analog Digital Converter)
-![](https://rockuapps.com/wp-content/uploads/2020/11/c-1-791x613.jpg)
+![]()
 
 **Vin** is input voltage for ADC to sample<br>
 
