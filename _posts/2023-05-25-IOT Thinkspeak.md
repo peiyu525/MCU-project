@@ -7,6 +7,13 @@ tags: [jekyll, ai]
 ---
 
 ---
+```
+
+---
+
+  
+---
+
 #include <WiFi.h>
 #include "DHT.h"
 
