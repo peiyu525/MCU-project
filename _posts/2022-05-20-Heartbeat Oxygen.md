@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 PWM
+title: Heartbeat Oxygen Heartbeat Oxygen
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
@@ -9,7 +9,7 @@ tags: [jekyll, ai]
 Introduction to PWM functions 
 
 ---
-## Heartbeat Oxygen Detector
+## Heartbeat Oxygen Heartbeat Oxygen
 <iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ```
