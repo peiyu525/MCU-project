@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ESP32 GPIO
+title: IOTThinkspeak
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
