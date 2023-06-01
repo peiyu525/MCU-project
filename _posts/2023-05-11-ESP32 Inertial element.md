@@ -15,6 +15,8 @@ Introduction to Inter-IC Sound bus.
 <iframe width="322" height="572" src="https://www.youtube.com/embed/SQNLK4ldXkY" title="KalmanFilter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
+## 系統方塊圖
+![](https://github.com/peijia0809/MCU-project/blob/main/_posts/%E4%BD%A0%E7%9A%84%E6%AE%B5%E8%90%BD%E6%96%87%E5%AD%97%20(1).png?raw=true)
 ---
 
 ```
