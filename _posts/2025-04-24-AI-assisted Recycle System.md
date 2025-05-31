@@ -26,111 +26,179 @@ tags: [jekyll, ai]
 
   
 ---
-#define DHTPIN 19     // NodeMCU pin D6 connected to DHT11 pin Data
-DHT dht(DHTPIN, DHT11, 15);
+/*
+ * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
+ * 功能：
+ * 1. 按下按鈕拍攝照片
+ * 2. 發送到 Google-Gemini 進行圖像識別
+ * 3. 將識別結果顯示在 LCD 上
+ * 4. 使用 Google-TTS 將結果轉為語音播放
+ */
 
-const char* ssid     = "Yeh";
-const char* password = "00000000";
+// WiFi 設定
+char wifi_ssid[] = "TCFSTWIFI.ALL";    // 你的 WiFi SSID
+char wifi_pass[] = "035623116";        // 你的 WiFi 密碼
 
+// API 金鑰
+String Gemini_key = "";               // 貼上你的 Gemini API 金鑰
+String google_tts_key = "";           // 如果需要，貼上你的 Google TTS API 金鑰
 
-const char* host = "api.thingspeak.com";
-const char* thingspeak_key = "6BQ13YRF3BJ97VZR";
+// 硬體設定
+const int buttonPin = 1;              // 按鈕接腳
+#define CHANNEL 0                     // 攝影機通道
+#define TFT_RESET 5                   // LCD 重置接腳
+#define TFT_DC 4                      // LCD 資料/命令接腳
+#define TFT_CS SPI_SS                 // LCD 片選接腳
+#define ILI9341_SPI_FREQUENCY 20000000 // LCD SPI 頻率
+#define FONTSIZE 2                    // 字體大小
+#define TEXTCOLOR ILI9341_GREEN       // 文字顏色
 
-void turnOff(int pin) {
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, 1);
+// 包含必要的庫
+#include <WiFi.h>
+#include <WiFiSSLClient.h>
+#include "GenAI.h"
+#include "VideoStream.h"
+#include "AmebaFatFS.h"
+#include "SPI.h"
+#include "AmebaILI9341.h"
+
+// 創建物件實例
+WiFiSSLClient client;
+GenAI llm;
+VideoSetting config(768, 768, CAM_FPS, VIDEO_JPEG, 1);
+AmebaFatFS fs;
+AmebaILI9341 tft = AmebaILI9341(TFT_CS, TFT_DC, TFT_RESET);
+
+// 全局變數
+uint32_t img_addr = 0;
+uint32_t img_len = 0;
+String prompt_msg = "Please describe the image, and if there is a text, please summarize the content";
+String mp3Filename = "gemini_response.mp3";
+
+void initWiFi()
+{
+    for (int i = 0; i < 2; i++) {
+        WiFi.begin(wifi_ssid, wifi_pass);
+
+        delay(1000);
+        Serial.println("");
+        Serial.print("Connecting to ");
+        Serial.println(wifi_ssid);
+
+        uint32_t StartTime = millis();
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(500);
+            if ((StartTime + 5000) < millis()) {
+                break;
+            }
+        }
+
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.println("");
+            Serial.println("STAIP address: ");
+            Serial.println(WiFi.localIP());
+            Serial.println("");
+            break;
+        }
+    }
 }
 
-void setup() {
-  Serial.begin(115200);
-
-  // disable all output to save power
-  turnOff(0);
-  turnOff(2);
-  turnOff(4);
-  turnOff(5);
-  turnOff(12);
-  turnOff(13);
-  turnOff(14);
-  turnOff(15);
-
-  dht.begin();
-  delay(10);
-  
-
-  // We start by connecting to a WiFi network
-
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  
-  WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");  
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+void init_TFTLCD(int textcolor, int fontsize)
+{
+    tft.clr();
+    tft.setCursor(0, 0);
+    tft.setForeground(textcolor);
+    tft.setFontSize(fontsize);
 }
 
-int value = 0;
-
-void loop() {
-  delay(5000);
-  ++value;
-
-  Serial.print("connecting to ");
-  Serial.println(host);
-  
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-  const int httpPort = 80;
-  if (!client.connect(host, httpPort)) {
-    Serial.println("connection failed");
-    return;
-  }
-
-  String temp = String(dht.readTemperature());
-  String humidity = String(dht.readHumidity());
-  //String voltage = String(system_get_free_heap_size());
-  String url = "/update?key=";
-  url += thingspeak_key;
-  url += "&field1=";
-  url += temp;
-  url += "&field2=";
-  url += humidity;
-  
-  Serial.print("Requesting URL: ");
-  Serial.println(url);
-  
-  // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" + 
-               "Connection: close\r\n\r\n");
-  delay(10);
-  
-  // Read all the lines of the reply from server and print them to Serial
-  while(client.available()){
-    String line = client.readStringUntil('\r');
-    Serial.print(line);
-  }
-  
-  Serial.println();
-  Serial.println("closing connection. going to sleep...");
-  delay(1000);
-  // go to deepsleep for 1 minutes
-  //system_deep_sleep_set_option(0);
-  //system_deep_sleep(1 * 60 * 1000000);
-  delay(1*60*1000);
+void sdPlayMP3(String filename)
+{
+    fs.begin();
+    String filepath = String(fs.getRootPath()) + filename;
+    File file = fs.open(filepath, MP3);
+    file.setMp3DigitalVol(120);
+    file.playMp3();
+    file.close();
+    fs.end();
 }
-```
 
----
+void displayTextOnLCD(String text)
+{
+    init_TFTLCD(TEXTCOLOR, FONTSIZE);
+    tft.setRotation(0); // 固定方向
+    tft.println("Gemini Response:");
+    tft.println("----------------");
+    tft.println(text);
+}
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // 初始化 WiFi
+    initWiFi();
+
+    // 初始化攝影機
+    config.setRotation(0);
+    Camera.configVideoChannel(CHANNEL, config);
+    Camera.videoInit();
+    Camera.channelBegin(CHANNEL);
+    Camera.printInfo();
+    
+    // 初始化按鈕和 LED
+    pinMode(buttonPin, INPUT);
+    pinMode(LED_B, OUTPUT);
+    pinMode(LED_G, OUTPUT);
+    
+    // 初始化 LCD
+    SPI.setDefaultFrequency(ILI9341_SPI_FREQUENCY);
+    tft.begin();
+    init_TFTLCD(TEXTCOLOR, FONTSIZE);
+    tft.println("System Ready");
+    tft.println("Press button to");
+    tft.println("capture & analyze");
+}
+
+void loop()
+{
+    if ((digitalRead(buttonPin)) == 1) {
+        // 指示按鈕按下
+        for (int count = 0; count < 3; count++) {
+            digitalWrite(LED_B, HIGH);
+            delay(500);
+            digitalWrite(LED_B, LOW);
+            delay(500);
+        }
+
+        // 拍攝照片
+        Camera.getImage(0, &img_addr, &img_len);
+        
+        // 顯示狀態
+        init_TFTLCD(TEXTCOLOR, FONTSIZE);
+        tft.println("Processing image...");
+        
+        // 發送到 Gemini 進行圖像識別
+        String response = llm.geminivision(Gemini_key, "gemini-2.0-flash", prompt_msg, img_addr, img_len, client);
+        Serial.println("Gemini Response:");
+        Serial.println(response);
+        
+        // 在 LCD 上顯示結果
+        displayTextOnLCD(response);
+        
+        // 使用 TTS 播放結果
+        tft.println("Generating speech...");
+        llm.googletts(mp3Filename, response, "en-US");
+        delay(500);
+        sdPlayMP3(mp3Filename);
+        
+        // 完成指示
+        digitalWrite(LED_G, HIGH);
+        delay(1000);
+        digitalWrite(LED_G, LOW);
+    }
+    
+    delay(100); // 防止按鈕彈跳
+}
 
   
 <br>
