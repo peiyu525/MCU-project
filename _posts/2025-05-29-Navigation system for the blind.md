@@ -29,63 +29,43 @@ tags: [jekyll, ai]
   
 ---
 /*
- * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
- * 功能：
- * 1. 按下按鈕拍攝照片
- * 2. 發送到 Google-Gemini 進行圖像識別
- * 3. 將識別結果顯示在 LCD 上
- * 4. 使用 Google-TTS 將結果轉為語音播放
- */
+#undef DEFAULT
+
+#include "VideoStream.h"
+#include "QRCodeScanner.h"
+#include "WiFi.h"
+#include <WiFiClient.h>
+#include <WiFiSSLClient.h>
+#include "AmebaFatFS.h"
+#include "GenAI.h"
 
 // WiFi 設定
-char wifi_ssid[] = "TCFSTWIFI.ALL";    // 你的 WiFi SSID
-char wifi_pass[] = "035623116";        // 你的 WiFi 密碼
+char ssid[] = "abcd";    // 請替換為您的 WiFi 名稱
+char pass[] = "88888888";        // 請替換為您的 WiFi 密碼
 
-// API 金鑰
-String Gemini_key = "";               // 貼上你的 Gemini API 金鑰
-String google_tts_key = "";           // 如果需要，貼上你的 Google TTS API 金鑰
+// 視頻設定
+#define CHANNEL 0
+VideoSetting config(CHANNEL);
 
-// 硬體設定
-const int buttonPin = 1;              // 按鈕接腳
-#define CHANNEL 0                     // 攝影機通道
-#define TFT_RESET 5                   // LCD 重置接腳
-#define TFT_DC 4                      // LCD 資料/命令接腳
-#define TFT_CS SPI_SS                 // LCD 片選接腳
-#define ILI9341_SPI_FREQUENCY 20000000 // LCD SPI 頻率
-#define FONTSIZE 2                    // 字體大小
-#define TEXTCOLOR ILI9341_GREEN       // 文字顏色
-
-// 包含必要的庫
-#include <WiFi.h>
-#include <WiFiSSLClient.h>
-#include "GenAI.h"
-#include "VideoStream.h"
-#include "AmebaFatFS.h"
-#include "SPI.h"
-#include "AmebaILI9341.h"
-
-// 創建物件實例
-WiFiSSLClient client;
-GenAI llm;
-VideoSetting config(768, 768, CAM_FPS, VIDEO_JPEG, 1);
+// 各功能模組
+QRCodeScanner Scanner;
 AmebaFatFS fs;
-AmebaILI9341 tft = AmebaILI9341(TFT_CS, TFT_DC, TFT_RESET);
+GenAI tts;
 
-// 全局變數
-uint32_t img_addr = 0;
-uint32_t img_len = 0;
-String prompt_msg = "Please describe the image, and if there is a text, please summarize the content";
-String mp3Filename = "gemini_response.mp3";
+// 系統狀態
+bool isScanning = true;
+bool hasNewQRResult = false;
+String lastQRResult = "";
+String mp3Filename = "location_speech.mp3";
 
+// 初始化 WiFi 連接
 void initWiFi()
 {
     for (int i = 0; i < 2; i++) {
-        WiFi.begin(wifi_ssid, wifi_pass);
-
+        WiFi.begin(ssid, pass);
         delay(1000);
-        Serial.println("");
-        Serial.print("Connecting to ");
-        Serial.println(wifi_ssid);
+        Serial.print("正在連接到 ");
+        Serial.println(ssid);
 
         uint32_t StartTime = millis();
         while (WiFi.status() != WL_CONNECTED) {
@@ -96,111 +76,107 @@ void initWiFi()
         }
 
         if (WiFi.status() == WL_CONNECTED) {
-            Serial.println("");
-            Serial.println("STAIP address: ");
+            Serial.println("WiFi 連接成功！");
+            Serial.print("IP 地址: ");
             Serial.println(WiFi.localIP());
-            Serial.println("");
-            break;
+            return;
+        }
+    }
+    Serial.println("WiFi 連接失敗！請檢查網路設定。");
+}
+
+// 初始化攝像頭與 QR 掃描器
+void initCamera()
+{
+    Camera.configVideoChannel(CHANNEL, config);
+    Camera.videoInit();
+    Scanner.StartScanning();
+}
+
+// 掃描 QR Code
+void scanQRCode()
+{
+    Scanner.GetResultString();
+    Scanner.GetResultLength();
+    if (Scanner.ResultString != nullptr && Scanner.ResultLength > 0) {
+        String currentResult = String(Scanner.ResultString);
+        if (currentResult != lastQRResult || lastQRResult.length() == 0) {
+            lastQRResult = currentResult;
+            hasNewQRResult = true;
         }
     }
 }
 
-void init_TFTLCD(int textcolor, int fontsize)
+// 處理掃描到的 QR Code 進行語音播報
+void processLocationSpeech(String locationName)
 {
-    tft.clr();
-    tft.setCursor(0, 0);
-    tft.setForeground(textcolor);
-    tft.setFontSize(fontsize);
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi 未連接，使用離線播報模式");
+        playDefaultMessage(locationName);
+        return;
+    }
+
+    String speechText = "Current location is " + locationName;
+    tts.googletts(mp3Filename, speechText, "en-US");
+    delay(500);  // 等待語音檔案生成
+
+    // 播放語音檔案
+    sdPlayMP3(mp3Filename);
 }
 
+// 播放預設語音
+void playDefaultMessage(String locationName)
+{
+    Serial.println("播放預設訊息: " + locationName);
+    String defaultMessage = "此為預設訊息。當無法獲取 TTS 音訊時播放此訊息。";
+    tts.googletts(mp3Filename, defaultMessage, "en-US");
+    delay(500);  // 等待語音檔案生成
+    sdPlayMP3(mp3Filename);
+}
+
+// 播放 MP3 檔案
 void sdPlayMP3(String filename)
 {
     fs.begin();
     String filepath = String(fs.getRootPath()) + filename;
     File file = fs.open(filepath, MP3);
-    file.setMp3DigitalVol(120);
+    file.setMp3DigitalVol(120);  // 設定音量
     file.playMp3();
     file.close();
     fs.end();
 }
 
-void displayTextOnLCD(String text)
-{
-    init_TFTLCD(TEXTCOLOR, FONTSIZE);
-    tft.setRotation(0); // 固定方向
-    tft.println("Gemini Response:");
-    tft.println("----------------");
-    tft.println(text);
-}
-
 void setup()
 {
     Serial.begin(115200);
-
-    // 初始化 WiFi
     initWiFi();
-
-    // 初始化攝影機
-    config.setRotation(0);
-    Camera.configVideoChannel(CHANNEL, config);
-    Camera.videoInit();
-    Camera.channelBegin(CHANNEL);
-    Camera.printInfo();
-    
-    // 初始化按鈕和 LED
-    pinMode(buttonPin, INPUT);
-    pinMode(LED_B, OUTPUT);
-    pinMode(LED_G, OUTPUT);
-    
-    // 初始化 LCD
-    SPI.setDefaultFrequency(ILI9341_SPI_FREQUENCY);
-    tft.begin();
-    init_TFTLCD(TEXTCOLOR, FONTSIZE);
-    tft.println("System Ready");
-    tft.println("Press button to");
-    tft.println("capture & analyze");
+    initCamera();
+    fs.begin();
+    Serial.println("系統初始化完成，開始掃描 QR Code...");
 }
 
 void loop()
 {
-    if ((digitalRead(buttonPin)) == 1) {
-        // 指示按鈕按下
-        for (int count = 0; count < 3; count++) {
-            digitalWrite(LED_B, HIGH);
-            delay(500);
-            digitalWrite(LED_B, LOW);
-            delay(500);
-        }
-
-        // 拍攝照片
-        Camera.getImage(0, &img_addr, &img_len);
-        
-        // 顯示狀態
-        init_TFTLCD(TEXTCOLOR, FONTSIZE);
-        tft.println("Processing image...");
-        
-        // 發送到 Gemini 進行圖像識別
-        String response = llm.geminivision(Gemini_key, "gemini-2.0-flash", prompt_msg, img_addr, img_len, client);
-        Serial.println("Gemini Response:");
-        Serial.println(response);
-        
-        // 在 LCD 上顯示結果
-        displayTextOnLCD(response);
-        
-        // 使用 TTS 播放結果
-        tft.println("Generating speech...");
-        llm.googletts(mp3Filename, response, "en-US");
-        delay(500);
-        sdPlayMP3(mp3Filename);
-        
-        // 完成指示
-        digitalWrite(LED_G, HIGH);
-        delay(1000);
-        digitalWrite(LED_G, LOW);
+    scanQRCode();
+    if (hasNewQRResult) {
+        Serial.println("掃描結果: " + lastQRResult);
+        processLocationSpeech(lastQRResult);
+        hasNewQRResult = false;
+        isScanning = false;  // 停止掃描
+        Serial.println("掃描完成，停止掃描。");
     }
-    
-    delay(100); // 防止按鈕彈跳
+
+    if (!isScanning) {
+        Serial.println("已完成掃描，停止進行新的掃描。");
+    }
+
+    delay(500);  // 減少延遲時間，增加掃描頻率
 }
+
+
+
+/*
+ *
 
   
 <br>
