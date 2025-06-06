@@ -5,23 +5,30 @@ author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
 ---
+## 系統功能介紹
+`每一分鐘拍攝一次，比較與前一分鐘拍攝影像是否相同，是則不儲存影像，否則儲存影像並說明影像重點`
 
-
+---
+## 系統方塊圖
+![]()
 
 ---
 ## AI surveillance video system
 
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
+![]()
 
 ---
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B62.jpg?raw=true)
+![]()
 
 ---
-<iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+## 系統編碼設計流程
+
 
 ---
-## 系統方塊圖
-![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
+## 程式生成提示詞
+
+---
+
 ```
 
 ---
@@ -263,9 +270,7 @@ void loop() {
   delay(100);
 }
 
-  
-<br>
-<br>
-
-*This site was last updated {{ site.time | date: "%B %d, %Y" }}.*
+```
+---
+## 心得
 
