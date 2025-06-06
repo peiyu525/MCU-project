@@ -4,29 +4,22 @@ title: Fairytale Teller
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
+
 ---
-
-
-
+## 系統功能介紹
+```
+透過鏡頭拍攝照片，利用AI將圖片以故事敘述出來
+```
 ---
 ## Fairytale Teller
 
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
-
----
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B62.jpg?raw=true)
-
----
-<iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="337" height="599" src="https://www.youtube.com/embed/lq2bxWHAIII" title="2025年6月6日" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
 ## 系統方塊圖
 ![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
 ```
 
----
-
-  
 ---
 /*
  * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
@@ -201,7 +194,9 @@ void loop()
     
     delay(100); // 防止按鈕彈跳
 }
-
+```
+---
+## 心得
   
 <br>
 <br>
