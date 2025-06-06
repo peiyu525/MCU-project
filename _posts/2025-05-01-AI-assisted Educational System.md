@@ -1,3 +1,4 @@
+---
 layout: post
 title: AI-assisted Educational System
 author: [Richard Kuo]
