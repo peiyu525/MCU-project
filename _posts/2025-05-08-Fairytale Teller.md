@@ -1,5 +1,5 @@
 layout: post
-title: AI-assisted Recycle System
+title: Fairytale Teller
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
@@ -8,7 +8,7 @@ tags: [jekyll, ai]
 
 
 ---
-## AI-assisted Recycle System
+## Fairytale Teller
 
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
 
