@@ -1,3 +1,4 @@
+---
 layout: post
 title: AI-assisted Recycle System
 author: [Richard Kuo]
