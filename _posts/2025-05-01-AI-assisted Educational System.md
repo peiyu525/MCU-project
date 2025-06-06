@@ -1,5 +1,5 @@
 layout: post
-title: AI-assisted Recycle System
+title: AI-assisted Educational System
 author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
@@ -8,7 +8,7 @@ tags: [jekyll, ai]
 
 
 ---
-## AI-assisted Recycle System
+## AI-assisted Educational System
 
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
 
