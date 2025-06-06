@@ -9,6 +9,15 @@ tags: [jekyll, ai]
 
 
 ---
+## 系統方塊圖
+![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
+
+---
+## 系統功能介紹
+`拍攝回收物，辨識出是什麼回收物且說明是壓扁或未壓扁`
+
+---
+
 ## AI-assisted Recycle System
 
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
@@ -20,22 +29,14 @@ tags: [jekyll, ai]
 <iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ---
-## 系統方塊圖
-![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
-```
+## 編碼設計流程
 
 ---
-
+## 程式生成提示詞
   
 ---
+```
 /*
- * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
- * 功能：
- * 1. 按下按鈕拍攝照片
- * 2. 發送到 Google-Gemini 進行圖像識別
- * 3. 將識別結果顯示在 LCD 上
- * 4. 使用 Google-TTS 將結果轉為語音播放
- */
 
 // WiFi 設定
 char wifi_ssid[] = "TCFSTWIFI.ALL";    // 你的 WiFi SSID
@@ -203,10 +204,9 @@ void loop()
 }
 
   
-<br>
-<br>
-
-*This site was last updated {{ site.time | date: "%B %d, %Y" }}.*
+---
+```
+## 心得
 
 
 
