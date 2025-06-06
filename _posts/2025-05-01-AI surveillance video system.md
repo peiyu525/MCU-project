@@ -15,10 +15,11 @@ tags: [jekyll, ai]
 ---
 ## AI surveillance video system
 
-![]()
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B11.jpg?raw=true)
 
----
-![]()
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B12.jpg?raw=true)
+
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B13.jpg?raw=true)
 
 ---
 ## 系統編碼設計流程
