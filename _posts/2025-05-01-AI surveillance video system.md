@@ -6,7 +6,7 @@ category: [Lecture]
 tags: [jekyll, ai]
 ---
 ## 系統功能介紹
-`每一分鐘拍攝一次，比較與前一分鐘拍攝影像是否相同，是則不儲存影像，否則儲存影像並說明影像重點`
+`每一分鐘拍攝一次，比較與前一分鐘拍攝影像透過判斷的文字確認是否相同，是則不儲存影像，否則儲存影像並儲存影像文字`
 
 ---
 ## 系統方塊圖
@@ -16,11 +16,20 @@ tags: [jekyll, ai]
 ## AI surveillance video system
 
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B11.jpg?raw=true)
-
+```text
+Time: 20250529_202703
+Description: A young woman with glasses wearing a rust-colored sweater looks up with a slightly questioning expression. The lighting overhead is bright.
+```
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B12.jpg?raw=true)
-
+```text
+Time: 20250529_202803
+Description: A person with glasses is making a peace sign in what appears to be a computer lab.  Bright overhead lights illuminate the room.
+```
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%9B%A3%E8%A6%96%E9%8C%84%E5%BD%B13.jpg?raw=true)
-
+```text
+Time: 20250529_202903
+Description: A woman with glasses and a red sweater gives a thumbs up, looking sideways. The background shows a ceiling with fluorescent lights.
+```
 ---
 ## 系統編碼設計流程
 
