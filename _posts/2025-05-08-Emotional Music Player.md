@@ -9,6 +9,9 @@ tags: [jekyll, ai]
 ```
 透過鏡頭拍攝人物臉部表情，判斷人物情緒撥放不同歌曲
 ```
+---
+## 系統方塊圖
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
 
 ---
 ## Emotional Music Player
@@ -22,8 +25,8 @@ tags: [jekyll, ai]
 ![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E6%83%85%E7%B7%92%E6%84%9F%E7%9F%A54.jpg?raw=true)
 
 ---
-## 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
+
+## 編碼設計流程
 
 ---
 ## 程式設計提示詞
