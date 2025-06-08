@@ -36,14 +36,21 @@ Description: A woman with glasses and a red sweater gives a thumbs up, looking s
 
 ---
 ## 程式生成提示詞
-
----
-
 ```
+/*
+Sample code:GenAIVision.ino、CaptureJPG_SDcard.ino、Simple_RTC.ino 
+Function:
+1) capture image per minute and send to Gemini Vision (1分鐘拍一張)
+2) if replied text has no change, then dont store the jpg and text
+    if replied text are different from the previous scene, then store the jpg and text 
+    (use date+time for the filename)
 
----
+Sample codes:
+1. GenAIVision.ino
+2. CaptureJPG_SDcard.ino
 
-  
+Code Design: 請AI幫你寫出以上功能的程式碼
+```  
 ---
 /*
 #include <WiFi.h>
