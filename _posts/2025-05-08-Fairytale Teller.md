@@ -11,64 +11,61 @@ tags: [jekyll, ai]
 透過鏡頭拍攝照片，利用AI將圖片以故事敘述出來
 ```
 ---
+## 系統方塊圖
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
+
+---
 ## Fairytale Teller
 
 <iframe width="337" height="599" src="https://www.youtube.com/embed/lq2bxWHAIII" title="2025年6月6日" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
-## 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
-```
+## 編碼設計流程
 
 ---
+## 程式碼提示詞
+![]()
+```
+
 /*
- * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
- * 功能：
- * 1. 按下按鈕拍攝照片
- * 2. 發送到 Google-Gemini 進行圖像識別
- * 3. 將識別結果顯示在 LCD 上
- * 4. 使用 Google-TTS 將結果轉為語音播放
- */
+This sketch captures an image when button is pressed, sends it to Gemini-Vision to generate a fairytale,
+then uses Google TTS to speak the story.
 
-// WiFi 設定
-char wifi_ssid[] = "TCFSTWIFI.ALL";    // 你的 WiFi SSID
-char wifi_pass[] = "035623116";        // 你的 WiFi 密碼
+Required libraries:
+- WiFi
+- GenAI
+- VideoStream
+- WiFiSSLClient
+- GoogleTTS (you'll need to add this library)
 
-// API 金鑰
-String Gemini_key = "";               // 貼上你的 Gemini API 金鑰
-String google_tts_key = "";           // 如果需要，貼上你的 Google TTS API 金鑰
+Credit : ChungYi Fu (Kaohsiung, Taiwan)
+Modified for fairytale generation and TTS
+*/
 
-// 硬體設定
-const int buttonPin = 1;              // 按鈕接腳
-#define CHANNEL 0                     // 攝影機通道
-#define TFT_RESET 5                   // LCD 重置接腳
-#define TFT_DC 4                      // LCD 資料/命令接腳
-#define TFT_CS SPI_SS                 // LCD 片選接腳
-#define ILI9341_SPI_FREQUENCY 20000000 // LCD SPI 頻率
-#define FONTSIZE 2                    // 字體大小
-#define TEXTCOLOR ILI9341_GREEN       // 文字顏色
+String openAI_key = "";               // paste your generated openAI API key here
+String Gemini_key = "";               // paste your generated Gemini API key here
+String Llama_key = "";                // paste your generated Llama API key here
+char wifi_ssid[] = "TCFSTWIFI.ALL";    // your network SSID (name)
+char wifi_pass[] = "035623116";        // your network password
 
-// 包含必要的庫
 #include <WiFi.h>
-#include <WiFiSSLClient.h>
 #include "GenAI.h"
 #include "VideoStream.h"
-#include "AmebaFatFS.h"
-#include "SPI.h"
-#include "AmebaILI9341.h"
-
-// 創建物件實例
+#include "GoogleTTS.h"  // Make sure you have this library installed
 WiFiSSLClient client;
 GenAI llm;
+GoogleTTS tts;
 VideoSetting config(768, 768, CAM_FPS, VIDEO_JPEG, 1);
-AmebaFatFS fs;
-AmebaILI9341 tft = AmebaILI9341(TFT_CS, TFT_DC, TFT_RESET);
+#define CHANNEL 0
 
-// 全局變數
 uint32_t img_addr = 0;
 uint32_t img_len = 0;
-String prompt_msg = "Please describe the image, and if there is a text, please summarize the content";
-String mp3Filename = "gemini_response.mp3";
+
+// Modified prompt to ask for a fairytale
+String prompt_msg = "Please look at this image and create a short, imaginative fairytale story based on what you see. Make it suitable for children with a happy ending.";
+
+const int buttonPin = 1;          // the number of the pushbutton pin
+const int speakerPin = 2;         // pin connected to speaker or audio output
 
 void initWiFi()
 {
@@ -98,66 +95,33 @@ void initWiFi()
     }
 }
 
-void init_TFTLCD(int textcolor, int fontsize)
-{
-    tft.clr();
-    tft.setCursor(0, 0);
-    tft.setForeground(textcolor);
-    tft.setFontSize(fontsize);
-}
-
-void sdPlayMP3(String filename)
-{
-    fs.begin();
-    String filepath = String(fs.getRootPath()) + filename;
-    File file = fs.open(filepath, MP3);
-    file.setMp3DigitalVol(120);
-    file.playMp3();
-    file.close();
-    fs.end();
-}
-
-void displayTextOnLCD(String text)
-{
-    init_TFTLCD(TEXTCOLOR, FONTSIZE);
-    tft.setRotation(0); // 固定方向
-    tft.println("Gemini Response:");
-    tft.println("----------------");
-    tft.println(text);
-}
-
 void setup()
 {
     Serial.begin(115200);
 
-    // 初始化 WiFi
     initWiFi();
 
-    // 初始化攝影機
     config.setRotation(0);
     Camera.configVideoChannel(CHANNEL, config);
     Camera.videoInit();
     Camera.channelBegin(CHANNEL);
     Camera.printInfo();
     
-    // 初始化按鈕和 LED
     pinMode(buttonPin, INPUT);
     pinMode(LED_B, OUTPUT);
     pinMode(LED_G, OUTPUT);
+    pinMode(speakerPin, OUTPUT);
     
-    // 初始化 LCD
-    SPI.setDefaultFrequency(ILI9341_SPI_FREQUENCY);
-    tft.begin();
-    init_TFTLCD(TEXTCOLOR, FONTSIZE);
-    tft.println("System Ready");
-    tft.println("Press button to");
-    tft.println("capture & analyze");
+    // Initialize TTS (adjust parameters as needed)
+    tts.setLanguage("en");  // Set to English
+    tts.setSpeed(1.0);      // Normal speed
+    tts.setPitch(1.0);      // Normal pitch
 }
 
 void loop()
 {
-    if ((digitalRead(buttonPin)) == 1) {
-        // 指示按鈕按下
+    if ((digitalRead(buttonPin)) == HIGH) {
+        // Visual feedback that button was pressed
         for (int count = 0; count < 3; count++) {
             digitalWrite(LED_B, HIGH);
             delay(500);
@@ -165,41 +129,46 @@ void loop()
             delay(500);
         }
 
-        // 拍攝照片
-        Camera.getImage(0, &img_addr, &img_len);
+        // Capture image
+        Camera.getImage(CHANNEL, &img_addr, &img_len);
         
-        // 顯示狀態
-        init_TFTLCD(TEXTCOLOR, FONTSIZE);
-        tft.println("Processing image...");
-        
-        // 發送到 Gemini 進行圖像識別
-        String response = llm.geminivision(Gemini_key, "gemini-2.0-flash", prompt_msg, img_addr, img_len, client);
-        Serial.println("Gemini Response:");
-        Serial.println(response);
-        
-        // 在 LCD 上顯示結果
-        displayTextOnLCD(response);
-        
-        // 使用 TTS 播放結果
-        tft.println("Generating speech...");
-        llm.googletts(mp3Filename, response, "en-US");
-        delay(500);
-        sdPlayMP3(mp3Filename);
-        
-        // 完成指示
-        digitalWrite(LED_G, HIGH);
-        delay(1000);
+        // Send to Gemini Vision to generate a fairytale
+        digitalWrite(LED_G, HIGH);  // Indicate processing
+        String story = llm.geminivision(Gemini_key, "gemini-1.5-pro", prompt_msg, img_addr, img_len, client);
         digitalWrite(LED_G, LOW);
+        
+        Serial.println("Generated Fairytale:");
+        Serial.println(story);
+        
+        // Send story to Google TTS and play it
+        if (story.length() > 0) {
+            Serial.println("Playing story with TTS...");
+            digitalWrite(LED_B, HIGH);  // Indicate audio playback
+            
+            // Split long text into chunks if needed (Google TTS may have character limits)
+            int maxChunkSize = 200;  // Adjust based on TTS limitations
+            for (int i = 0; i < story.length(); i += maxChunkSize) {
+                String chunk = story.substring(i, min(i + maxChunkSize, story.length()));
+                
+                // Get TTS audio and play it
+                tts.speak(chunk, speakerPin);
+                
+                // Wait for playback to finish (adjust delay as needed)
+                delay(1000);
+            }
+            
+            digitalWrite(LED_B, LOW);
+        } else {
+            Serial.println("No story was generated.");
+        }
+        
+        // Small delay to prevent multiple triggers
+        delay(1000);
     }
-    
-    delay(100); // 防止按鈕彈跳
 }
 ```
 ---
 ## 心得
   
-<br>
-<br>
 
-*This site was last updated {{ site.time | date: "%B %d, %Y" }}.*
 
