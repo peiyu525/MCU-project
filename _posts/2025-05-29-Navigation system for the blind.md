@@ -10,13 +10,19 @@ tags: [jekyll, ai]
 透過鏡頭掃描QR code念出地點
 ```
 ---
+## 系統方塊圖
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
+
+---
 ## Navigation system for the blind
 
 <iframe width="337" height="599" src="https://www.youtube.com/embed/5r9KPE47gI4" title="盲人導航系統" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+---
+## 編碼設計流程
 
 ---
-## 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
+## 程式設計提示詞
+![]()
 ```
 
 ---
