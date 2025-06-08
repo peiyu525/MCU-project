@@ -20,6 +20,7 @@ tags: [jekyll, ai]
 
 ---
 ## 編碼設計流程
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E6%B5%81%E7%A8%8B%E5%9C%96.png?raw=true)
 
 ---
 ## 程式設計提示詞
