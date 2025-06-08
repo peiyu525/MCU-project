@@ -25,7 +25,7 @@ tags: [jekyll, ai]
 
 ---
 ## 程式設計提示詞
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E5%9B%9E%E6%94%B6.png?raw=true)
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%AE%80%E5%AD%97%E5%8D%A1.png?raw=true)
 ```
 
 ---
