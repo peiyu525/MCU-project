@@ -10,7 +10,7 @@ tags: [jekyll, ai]
 
 ---
 ## 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/image.png?raw=true)
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
 
 ---
 ## AI surveillance video system
