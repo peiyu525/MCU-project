@@ -5,29 +5,31 @@ author: [Richard Kuo]
 category: [Lecture]
 tags: [jekyll, ai]
 ---
+## 系統功能介紹
+```
 
-
+```
+---
+## 系統方塊圖
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
 
 ---
 ## Visual assistance system
 
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B61.jpg?raw=true)
+<iframe width="337" height="599" src="https://www.youtube.com/embed/3bE6IRuO9cA" title="盲人視覺輔助--時間" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<iframe width="337" height="599" src="https://www.youtube.com/embed/enoquvDqgIM" title="盲人視覺系統--影像辨識" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 
 ---
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E8%BC%94%E5%8A%A9%E5%9B%9E%E6%94%B62.jpg?raw=true)
+## 編碼設計流程
 
 ---
-<iframe width="442" height="785" src="https://www.youtube.com/embed/o9eQNXdhivI" title="心跳血氧偵測器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+## 程式碼提示詞
+![]()
 
----
-## 系統方塊圖
-![](https://github.com/peiyu525/MCU-project/blob/main/_posts/%E7%B3%BB%E7%B5%B1%E6%96%B9%E5%A1%8A%E5%9C%96.jpg?raw=true)
+
 ```
-
----
-
-  
----
 /*
  * 整合 GenAI Vision, TTS 和 LCD 顯示的 Arduino 程式碼
  * 功能：
@@ -207,4 +209,7 @@ void loop()
 <br>
 
 *This site was last updated {{ site.time | date: "%B %d, %Y" }}.*
+```
+---
+## 心得
 
