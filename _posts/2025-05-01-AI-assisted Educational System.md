@@ -8,7 +8,6 @@ tags: [jekyll, ai]
 ## 系統功能介紹
 ```
 透過鏡頭拍攝文字，利用拍攝的文字造句並唸出來
-
 ```
 ---
 ## AI-assisted Educational System
@@ -20,7 +19,7 @@ tags: [jekyll, ai]
 
 ---
 ## 系統方塊圖
-![](https://github.com/peijia0809/MCU-project/blob/main/_posts/thinkspeak.png?raw=true)
+![](https://github.com/peiyu525/MCU-project/blob/main/_posts/image.png?raw=true)
 ```
 
 ---
