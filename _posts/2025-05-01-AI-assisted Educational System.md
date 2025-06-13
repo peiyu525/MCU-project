@@ -205,12 +205,11 @@ void loop()
     
     delay(100); // Small delay to prevent button bounce
 }
----
 
 ```  
 
 ---
 ## 心得
-
-  
-
+``` 
+這次的實驗很適合使用在學習英文的時候，拍攝字卡後就能知道該如何念，是一個很很有發展的實驗  
+``` 
